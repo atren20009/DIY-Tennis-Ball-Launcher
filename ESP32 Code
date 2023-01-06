@@ -1,5 +1,9 @@
 //tennis ball launcher code for Arduino IDE
 
+//Servo Pin: 4
+//RF Receiver Pin: 33
+//Mosfet Pin: 2
+
 //unsigned long previousMillis = 0; // last time update
 //long interval = 2000; // interval at which to do something (milliseconds)
 
@@ -43,6 +47,7 @@ Servo DispServo;
 
 //static const int ServoGPIO = 4; // define the GPIO pin with which servo is connected
 
+//optional wifi credentials for http request. For linking with smart home 
 const char* ssid = "YOUR WIFI"; // Enter your network name
 const char* password = "PASSWORD"; //Enter your network password
 
