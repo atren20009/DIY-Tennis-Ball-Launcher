@@ -1,0 +1,126 @@
+//tennis ball launcher code for Arduino IDE
+
+//unsigned long previousMillis = 0; // last time update
+//long interval = 2000; // interval at which to do something (milliseconds)
+
+#define BUTTON_PIN_BITMASK 0x200000000 // 2^33 in hex
+
+/*
+Method to print the reason by which ESP32
+has been awaken from sleep
+*/
+void print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
+
+const int powerPin =  2;  
+const int triggerPin =  33;  
+//const int solenoidPin =  25; 
+
+#include <WiFi.h> 
+#include <ESP32Servo.h>
+#include <HTTPClient.h>
+ 
+// Recommended PWM GPIO pins on the ESP32 include 2,4,12-19,21-23,25-27,32-33 
+int servoPin = 4;
+int disppin = 25;
+
+Servo ObjServo; 
+
+Servo DispServo;
+
+//static const int ServoGPIO = 4; // define the GPIO pin with which servo is connected
+
+const char* ssid = "YOUR WIFI"; // Enter your network name
+const char* password = "PASSWORD"; //Enter your network password
+
+void setup(){ 
+ 
+//esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1); //1 = High, 0 = Low
+
+pinMode(powerPin, OUTPUT);
+
+ObjServo.attach(servoPin);
+DispServo.attach(disppin);
+
+pinMode(triggerPin, INPUT);  
+
+//pinMode(solenoidPin, OUTPUT); 
+
+Serial.begin(115200); //define serial commuination with baud rate of 115200
+//ObjServo.attach(ServoGPIO); // it will attach the ObjServo to ServoGPIO pin which is 4 
+Serial.print("Making connection to "); // it will display message on serial monitor
+Serial.println(ssid);
+WiFi.begin(ssid, password);
+
+}
+
+void loop(){
+  
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1); //1 = High, 0 = Low
+  
+  //unsigned long currentMillis = millis();
+
+  //if(currentMillis - previousMillis > interval) {
+     //previousMillis = currentMillis;
+  //}
+  
+  digitalWrite(powerPin, HIGH);
+
+  //ObjServo.write(0);
+  delay(200);
+  ObjServo.write(120); 
+  delay(400);
+  digitalWrite(powerPin, LOW);
+  delay(200);
+  ObjServo.write(0);
+  
+  //delay (200);
+  
+  //digitalWrite(powerPin, LOW);
+
+  delay (200);
+
+  digitalWrite(triggerPin, LOW);
+  
+  delay (200);
+
+  DispServo.write(60);
+  delay (300);
+  DispServo.write(30);
+
+  delay (200);
+ 
+  HTTPClient http;
+
+    http.begin("http://YOUR CUSTOM URL:PORT"); //Specify the URL
+    int httpCode = http.GET();                                        //Make the request
+
+    if (httpCode > 0) { //Check for the returning code
+
+      String payload = http.getString();
+      Serial.println(httpCode);
+      Serial.println(payload);
+    }
+
+    else {
+      Serial.println("Error on HTTP request");
+    }
+
+    http.end(); //Free the resources
+
+  delay (200);
+  esp_deep_sleep_start();
+}
